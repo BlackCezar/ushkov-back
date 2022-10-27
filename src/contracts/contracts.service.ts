@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Contract, ContractDocument } from '../schemas/Contract';
-import { CreateContractDto } from '../Contracts/dto/create-contract.dto';
-import { UpdateContractDto } from '../Contracts/dto/update-contract.dto';
+import { CreateContractDto } from '../contracts/dto/create-contract.dto';
+import { UpdateContractDto } from '../contracts/dto/update-contract.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 
