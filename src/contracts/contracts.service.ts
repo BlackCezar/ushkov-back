@@ -31,6 +31,7 @@ export class ContractsService {
     id: string,
     updateContractDto: UpdateContractDto,
   ): Promise<Contract> {
+    console.dir(updateContractDto);
     return await this.model.findByIdAndUpdate(id, updateContractDto).exec();
   }
 

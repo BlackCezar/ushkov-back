@@ -15,7 +15,7 @@ export class UserSeed {
     describe: 'create a admin user',
   })
   async create() {
-    console.log('Create');
+    console.log('Create', process.env.ADMIN_PASS);
     const password = await this.hashService.hash(process.env.ADMIN_PASS);
     const user = await this.userService.create({
       email: process.env.ADMIN_LOGIN,

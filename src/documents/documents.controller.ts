@@ -16,8 +16,7 @@ import {
 import { DocumentsService } from './documents.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
-import path, { join } from 'path';
-import { Types } from 'mongoose';
+import { join } from 'path';
 import { createReadStream } from 'fs';
 import { stat } from 'fs/promises';
 import { Public } from '../common/decorators/public.decorator';
@@ -41,6 +40,9 @@ export class DocumentsController {
           cb(null, `${randomName}${extname(file.originalname)}`);
         },
       }),
+      limits: {
+        fieldSize: 1073741824,
+      },
     }),
   )
   uploadFile(@UploadedFile() file: Express.Multer.File, @Param() p) {
@@ -64,8 +66,8 @@ export class DocumentsController {
 
   @Public()
   @Get('download/:filename')
-  @Header('Content-Type', 'application/pdf')
-  @Header('Content-Disposition', 'attachment; filename=file.pdf')
+  // @Header('Content-Type', 'application/pdf')
+  // @Header('Content-Disposition', 'attachment; filename=file.pdf')
   async getFile(@Param() params): Promise<StreamableFile> {
     const path = join(process.cwd(), 'documents', params.filename);
 

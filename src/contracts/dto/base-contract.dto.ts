@@ -4,8 +4,8 @@ import { ContractStatus } from '../../schemas/Contract';
 export class BaseContractDto {
   name: string;
   number: string;
-  startDate: Date;
-  endDate: Date;
+  startDate: Date | string;
+  endDate: Date | string;
   status: ContractStatus;
   amount: number;
   documents: SFile[];

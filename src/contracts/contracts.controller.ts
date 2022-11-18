@@ -20,6 +20,9 @@ export class ContractsController {
   async index(@Query('organization') organization: string | undefined) {
     const params: any = {};
     if (organization) params.organization = organization;
+    else {
+      return [];
+    }
     return await this.contractsService.findAll(params);
   }
 
@@ -41,7 +44,7 @@ export class ContractsController {
     return await this.contractsService.update(id, updateContractDto);
   }
 
-  @Delete()
+  @Delete(':id')
   async delete(@Param('id') id: string) {
     return await this.contractsService.delete(id);
   }

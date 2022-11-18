@@ -34,9 +34,9 @@ export class OrganizationsService {
     id: string,
     updateOrganizationDto: UpdateOrganizationDto,
   ): Promise<Organization> {
-    return await (
-      await this.model.findByIdAndUpdate(id, updateOrganizationDto).exec()
-    ).populate('users');
+    console.log(id);
+    await this.model.updateOne({ _id: id }, updateOrganizationDto);
+    return this.model.findById(id).populate('users');
   }
 
   async delete(id: string): Promise<Organization> {
