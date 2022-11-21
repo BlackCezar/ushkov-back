@@ -16,6 +16,11 @@ import { UpdateContractDto } from './dto/update-contract.dto';
 export class ContractsController {
   constructor(private contractsService: ContractsService) {}
 
+  @Get('/export')
+  async exportTable(@Query('id') id: string) {
+      return await this.contractsService.exportExcel(id)
+  }
+
   @Get()
   async index(@Query('organization') organization: string | undefined) {
     const params: any = {};

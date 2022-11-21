@@ -15,6 +15,11 @@ import { UpdateOrganizationDto } from './dto/update-organization.dto';
 export class OrganizationsController {
   constructor(private organizationsService: OrganizationsService) {}
 
+  @Get(':id/export')
+  async exportOrganization(@Param('id') id: string) {
+    return await this.organizationsService.exportTable(id)
+  }
+
   @Get()
   async index() {
     return await this.organizationsService.findAll();

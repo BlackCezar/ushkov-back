@@ -82,6 +82,24 @@ export class DocumentsController {
     }
   }
 
+  @Public()
+  @Get('export/:filename')
+  // @Header('Content-Type', 'application/pdf')
+  // @Header('Content-Disposition', 'attachment; filename=file.pdf')
+  async getExportFile(@Param() params): Promise<StreamableFile> {
+    const path = join(process.cwd(), 'documents', 'export', params.filename);
+
+    try {
+      if (await stat(path)) {
+        const file = createReadStream(path);
+        return new StreamableFile(file);
+      }
+    } catch (e) {
+      console.error(e);
+      throw new BadRequestException();
+    }
+  }
+
   @Delete(':id')
   async deleteFile(@Param('id') id: string) {
     await this.documentsService.deleteDocument(id);
