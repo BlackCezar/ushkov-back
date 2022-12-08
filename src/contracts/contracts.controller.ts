@@ -11,6 +11,7 @@ import {
 import { ContractsService } from './contracts.service';
 import { CreateContractDto } from './dto/create-contract.dto';
 import { UpdateContractDto } from './dto/update-contract.dto';
+import {ContractStatus} from "../schemas/Contract";
 
 @Controller('contracts')
 export class ContractsController {
@@ -22,12 +23,11 @@ export class ContractsController {
   }
 
   @Get()
-  async index(@Query('organization') organization: string | undefined) {
+  async index(@Query('organization') organization?: string, @Query('status') status?: string) {
     const params: any = {};
-    if (organization) params.organization = organization;
-    else {
-      return [];
-    }
+    if (organization) params.organization = organization; else return [];
+    params.status = status ? parseInt(status) : {$ne: ContractStatus.Archived}
+
     return await this.contractsService.findAll(params);
   }
 

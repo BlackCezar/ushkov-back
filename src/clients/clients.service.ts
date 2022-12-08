@@ -1,13 +1,16 @@
-import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Organization, OrganizationDocument } from '../schemas/Organization';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import {Injectable} from '@nestjs/common';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model} from 'mongoose';
+import {CreateClientDto} from './dto/create-client.dto';
+import {UpdateClientDto} from './dto/update-client.dto';
 import * as ExcelJS from 'exceljs';
 import {Contract, ContractDocument} from "../schemas/Contract";
 import {FileDocument, SFile} from "../schemas/SFile";
 import {join} from "path";
+import {Client, ClientDocument} from "../schemas/Client";
+import {User, UserDocument} from "../schemas/User";
+import {HashService} from "../helpers/hash.service";
+import {Role} from "../common/types/role.enum";
 
 enum ContractStatus {
   'В работе',
@@ -16,14 +19,17 @@ enum ContractStatus {
 }
 
 @Injectable()
-export class OrganizationsService {
+export class ClientsService {
   constructor(
-    @InjectModel(Organization.name)
-    private readonly model: Model<OrganizationDocument>,
+    @InjectModel(Client.name)
+    private readonly model: Model<ClientDocument>,
     @InjectModel(Contract.name)
     private readonly contracts: Model<ContractDocument>,
     @InjectModel(SFile.name)
-    private readonly docs: Model<FileDocument>
+    private readonly docs: Model<FileDocument>,
+  @InjectModel(User.name)
+  private readonly users: Model<UserDocument>,
+    private hashService: HashService,
   ) {}
 
   async exportTable(id: string) {
@@ -56,7 +62,7 @@ export class OrganizationsService {
         right: {style:'thin'}
       }
     }
-    sheet.mergeCells('A1:L1')
+    sheet.mergeCells('A1:H1')
     const nameCell = sheet.getCell('A1')
     nameCell.value = organization.name
     sheet.getRow(1).height = 40
@@ -66,39 +72,30 @@ export class OrganizationsService {
       {header: 'Наименование контракта (договора )', key: 'name', width: 50},
       {header: 'Дата начала исполнения', key: 'startDate', width: 14},
       {header: 'Дата окончания исполнения', key: 'endDate', width: 14},
-      {header: 'Статус', key: 'status', width: 30},
       {header: 'Сумма контракта / договора', key: 'amount', width: 15},
-      {header: 'Сумма платежных поручений', key: 'billAmount', width: 15},
-      {header: 'Сумма актов выполненных работ', key: 'actsAmount', width: 15},
-      {header: 'Сумма УПД', key: 'updAmount', width: 15},
-      {header: 'Претензии (есть/нет)', key: 'hasClaim', width: 13},
-      {header: 'Расторжения (есть/нет)', key: 'hasTerminations', width: 13},
-      {header: 'Доп соглашения (есть/нет)', key: 'hasAdditAgreement', width: 13},
+      {header: 'СМП', key: 'NSR', width: 15},
+      {header: 'ИНН', key: 'TIN', width: 15},
+      {header: 'Закон', key: 'type', width: 15},
     ]
     const rows = []
     sheet.addRow(cols.map(col => col.header), 'n')
     const headerRow =sheet.getRow(2)
 
     for (const contract of contracts) {
-      const docs = await this.docs.find({contract: contract._id})
-      const hasAdditAgreement = docs.find(d => d.type === 'AdditAgreement')
-      // @ts-ignore
-      const hasTerminations = docs.find(d => d.type === 'Terminations')
-      const hasClaim = docs.find(d => d.type === 'Claim')
-      const updAmount = docs.filter(d => d.type === 'Transfer').reduce((acc, doc) => acc += doc.amount, 0.0)
-      const actsAmount = docs.filter(d => d.type === 'Closure').reduce((acc, doc) => acc += doc.amount, 0.0)
-      const billAmount = docs.filter(d => d.type === 'Bill').reduce((acc, doc) => acc += doc.amount, 0.0)
+      let type = ''
+      if (contract.type === '223') type = '223-ФЗ';
+      else if (contract.type === '44.4') type = 'п.4 - 44-ФЗ';
+      else if (contract.type === '44.5') type = 'п.5 - 44-ФЗ'
+
       rows.push([
           contract.number,
           contract.name,
           contract.startDate,
           contract.endDate,
-          ContractStatus[contract.status],
           contract.amount,
-          billAmount, actsAmount, updAmount,
-          hasClaim ? 'Есть' : 'Нет',
-          hasTerminations ? 'Есть' : 'Нет',
-          hasAdditAgreement ? 'Есть' : 'Нет'
+          contract.NSR ? 'Да' : 'Нет',
+          contract.TIN,
+          type
       ])
     }
     sheet.addRows(rows)
@@ -114,7 +111,7 @@ export class OrganizationsService {
       // @ts-ignore
       column.alignment = style.alignment
 
-      if (['amount', 'billAmount', 'actsAmount', 'updAmount'].indexOf(cols[i].key) !== -1) {
+      if (['amount'].indexOf(cols[i].key) !== -1) {
         column.numFmt =  '# ##0,00" ₽"'
       }
 
@@ -141,34 +138,50 @@ export class OrganizationsService {
     return {filename}
   }
 
-  async findAll(): Promise<Organization[]> {
-    return await this.model.find().populate('users').exec();
+  async findAll(): Promise<Client[]> {
+    return await this.model.find().populate('user').exec();
   }
 
-  async findOne(id: string): Promise<Organization> {
-    return await (await this.model.findById(id).exec()).populate('users');
+  async findOne(id: string): Promise<Client> {
+    return await (await this.model.findOne({user: id}).exec()).populate('user');
   }
 
   async create(
-    createOrganizationDto: CreateOrganizationDto,
-  ): Promise<Organization> {
-    const user = await new this.model({
-      ...createOrganizationDto,
+    createClientDto: CreateClientDto,
+  ): Promise<Client> {
+    const password = await this.hashService.hash(createClientDto.user.password)
+    const user = await this.users.create({
+      password,
+      name: createClientDto.name,
+      email: createClientDto.user.email,
+      role: Role.CLIENT
+    })
+    console.log('Create user', user)
+    console.log(createClientDto)
+    const client = await new this.model({
+      name: createClientDto.name,
+      law: createClientDto.law,
       createdAt: new Date(),
+      user: user._id
     }).save();
-    return await user.populate('users');
+    return await client.populate('user');
   }
 
   async update(
     id: string,
-    updateOrganizationDto: UpdateOrganizationDto,
-  ): Promise<Organization> {
-    console.log(id);
-    await this.model.updateOne({ _id: id }, updateOrganizationDto);
-    return this.model.findById(id).populate('users');
+    updateClientDto: UpdateClientDto,
+  ): Promise<Client> {
+    console.log(updateClientDto.user);
+    // @ts-ignore
+    await this.users.updateOne({_id: updateClientDto.user._id}, {
+      email: updateClientDto.user.email,
+      name: updateClientDto.user.name,
+    })
+    await this.model.updateOne({ _id: id }, updateClientDto);
+    return this.model.findById(id).populate('user');
   }
 
-  async delete(id: string): Promise<Organization> {
+  async delete(id: string): Promise<Client> {
     return await this.model.findByIdAndDelete(id).exec();
   }
 }

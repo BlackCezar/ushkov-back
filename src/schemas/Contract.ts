@@ -6,6 +6,7 @@ export enum ContractStatus {
   Active,
   Success,
   Fail,
+  Archived
 }
 
 export type ContractDocument = Contract & Document;
@@ -20,7 +21,7 @@ export class Contract {
   startDate: Date;
   @Prop()
   endDate: Date;
-  @Prop()
+  @Prop({index: true, enum: ContractStatus, type: Number})
   status: ContractStatus;
   @Prop()
   amount: number;
@@ -30,6 +31,12 @@ export class Contract {
   organization: string;
   @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SFile' }] })
   documents: SFile[];
+  @Prop()
+  TIN: string;
+  @Prop({type: Boolean, default: false})
+  NSR: boolean;
+  @Prop({type: String, required: false})
+  comment?: string;
 }
 
 export const ContractSchema = SchemaFactory.createForClass(Contract);

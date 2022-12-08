@@ -7,44 +7,44 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { OrganizationsService } from './organizations.service';
-import { CreateOrganizationDto } from './dto/create-organization.dto';
-import { UpdateOrganizationDto } from './dto/update-organization.dto';
+import { ClientsService } from './clients.service';
+import { CreateClientDto } from './dto/create-client.dto';
+import { UpdateClientDto } from './dto/update-client.dto';
 
-@Controller('organizations')
-export class OrganizationsController {
-  constructor(private organizationsService: OrganizationsService) {}
+@Controller('clients')
+export class ClientsController {
+  constructor(private clientsService: ClientsService) {}
 
   @Get(':id/export')
   async exportOrganization(@Param('id') id: string) {
-    return await this.organizationsService.exportTable(id)
+    return await this.clientsService.exportTable(id)
   }
 
   @Get()
   async index() {
-    return await this.organizationsService.findAll();
+    return await this.clientsService.findAll();
   }
 
   @Get(':id')
   async find(@Param('id') id: string) {
-    return await this.organizationsService.findOne(id);
+    return await this.clientsService.findOne(id);
   }
 
   @Post()
-  async create(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return await this.organizationsService.create(createOrganizationDto);
+  async create(@Body() createClientDto: CreateClientDto) {
+    return await this.clientsService.create(createClientDto);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: string,
-    @Body() updateOrganizationDto: UpdateOrganizationDto,
+    @Body() updateClientDto: UpdateClientDto,
   ) {
-    return await this.organizationsService.update(id, updateOrganizationDto);
+    return await this.clientsService.update(id, updateClientDto);
   }
 
   @Delete(':id')
   async delete(@Param('id') id: string) {
-    return await this.organizationsService.delete(id);
+    return await this.clientsService.delete(id);
   }
 }

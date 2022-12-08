@@ -1,12 +1,12 @@
-import { Injectable } from '@nestjs/common';
-import { Contract, ContractDocument } from '../schemas/Contract';
-import { CreateContractDto } from '../contracts/dto/create-contract.dto';
-import { UpdateContractDto } from '../contracts/dto/update-contract.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import {Injectable} from '@nestjs/common';
+import {Contract, ContractDocument} from '../schemas/Contract';
+import {CreateContractDto} from '../contracts/dto/create-contract.dto';
+import {UpdateContractDto} from '../contracts/dto/update-contract.dto';
+import {InjectModel} from '@nestjs/mongoose';
+import {Model} from 'mongoose';
 import * as ExcelJS from "exceljs";
 import {Organization, OrganizationDocument} from "../schemas/Organization";
-import {FileDocument, SFile} from "../schemas/SFile";
+import {FileDocument, FileTypes, SFile} from "../schemas/SFile";
 import {join} from "path";
 
 @Injectable()
@@ -192,7 +192,7 @@ export class ContractsService {
   }
 
   async findAll(params?: any): Promise<Contract[]> {
-    return await this.model.find(params).exec();
+    return this.model.find(params).populate('documents');
   }
 
   async findOne(id: string): Promise<Contract> {
@@ -211,6 +211,16 @@ export class ContractsService {
     updateContractDto: UpdateContractDto,
   ): Promise<Contract> {
     console.dir(updateContractDto);
+    if (updateContractDto.filename) {
+      const doc = await this.docs.create({
+        filename:updateContractDto.filename,
+        type: FileTypes.Contract,
+        contract: updateContractDto._id
+      })
+      if (updateContractDto.documents) updateContractDto.documents.push(doc._id); else {
+        updateContractDto.documents = [doc._id];
+      }
+    }
     return await this.model.findByIdAndUpdate(id, updateContractDto).exec();
   }
 

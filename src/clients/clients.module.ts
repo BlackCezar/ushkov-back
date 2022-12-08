@@ -1,20 +1,22 @@
 import { Module } from '@nestjs/common';
-import { OrganizationsController } from './organizations.controller';
-import { OrganizationsService } from './organizations.service';
+import { ClientsController } from './clients.controller';
+import { ClientsService } from './clients.service';
 import { MongooseModule } from '@nestjs/mongoose';
-import { Organization, OrganizationSchema } from '../schemas/Organization';
+import { Client, ClientSchema } from '../schemas/Client';
 import {Contract, ContractSchema} from "../schemas/Contract";
 import {FileSchema, SFile} from "../schemas/SFile";
+import {User, UserSchema} from "../schemas/User";
 
 @Module({
   imports: [
     MongooseModule.forFeature([
-      { name: Organization.name, schema: OrganizationSchema },
+      { name: Client.name, schema: ClientSchema },
       { name: Contract.name, schema: ContractSchema},
       { name: SFile.name, schema: FileSchema},
+      { name: User.name, schema: UserSchema},
     ]),
   ],
-  controllers: [OrganizationsController],
-  providers: [OrganizationsService],
+  controllers: [ClientsController],
+  providers: [ClientsService],
 })
-export class OrganizationsModule {}
+export class ClientsModule {}

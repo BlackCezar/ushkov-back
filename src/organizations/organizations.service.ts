@@ -13,6 +13,7 @@ enum ContractStatus {
   'В работе',
   'Успешно',
   'Ошибка',
+  'Архив'
 }
 
 @Injectable()
@@ -28,7 +29,7 @@ export class OrganizationsService {
 
   async exportTable(id: string) {
     const organization = await this.model.findById(id)
-    const contracts = await this.contracts.find({organization: organization._id})
+    const contracts = await this.contracts.find({organization: organization._id, status: {$ne: 3}}).lean()
     const workbook = new ExcelJS.Workbook()
     workbook.creator = 'АСУЗД'
     workbook.created = new Date()

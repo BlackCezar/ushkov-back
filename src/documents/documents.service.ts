@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { unlink } from 'fs/promises';
+import {stat, unlink} from 'fs/promises';
 import { join } from 'path';
 import { InjectModel } from '@nestjs/mongoose';
 import { FileDocument, SFile } from '../schemas/SFile';
@@ -10,9 +10,20 @@ export class DocumentsService {
   constructor(@InjectModel(SFile.name) private model: Model<FileDocument>) {}
 
   async deleteDocument(id: string) {
-    const file = await this.model.findByIdAndDelete(id);
-    if (file.filename)
-      await unlink(join(process.cwd(), 'documents', file.filename));
+    try {
+      const file = await this.model.findByIdAndDelete(id);
+      let link = join(process.cwd(), 'documents', file.filename)
+      if (file.filename)
+        await unlink(link);
+    } catch (err: any) {
+      if (err.kind === 'ObjectId') {
+        let link = join(process.cwd(), 'documents', id)
+        const file = await this.model.findOneAndRemove({filename: id})
+        if (file && file.filename) await unlink(link); else {
+          if (await stat(link)) await unlink(link)
+        }
+      } else console.log(err)
+    }
   }
 
   async updateFile(fileId: string, data) {

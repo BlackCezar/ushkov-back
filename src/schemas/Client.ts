@@ -1,18 +1,17 @@
 import mongoose, { Document } from 'mongoose';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { User } from './User';
-import { Contract } from './Contract';
 
-export type OrganizationDocument = Organization & Document;
+export type ClientDocument = Client & Document;
 
 @Schema()
-export class Organization {
+export class Client {
   @Prop()
   name: string;
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }] })
-  users: User[];
-  @Prop({ type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Contract' }] })
-  contracts: Contract[];
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+  user: User;
+  @Prop()
+  law: string;
 }
 
-export const OrganizationSchema = SchemaFactory.createForClass(Organization);
+export const ClientSchema = SchemaFactory.createForClass(Client);

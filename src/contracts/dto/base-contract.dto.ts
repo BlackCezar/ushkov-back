@@ -9,4 +9,7 @@ export class BaseContractDto {
   status: ContractStatus;
   amount: number;
   documents: SFile[];
+  TIN?: string;
+  NSR?: boolean;
+  comment?: string;
 }
