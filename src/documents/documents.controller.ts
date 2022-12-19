@@ -59,6 +59,11 @@ export class DocumentsController {
     return await this.documentsService.updateFile(id, data);
   }
 
+  @Get('/client')
+  async getClientFiles(@Query('userId') userId: string) {
+    return await this.documentsService.getClientFiles(userId);
+  }
+
   @Get('')
   async getFiles(@Query('contractId') contractId: string) {
     return await this.documentsService.getFiles(contractId);

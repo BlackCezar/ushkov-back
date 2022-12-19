@@ -19,7 +19,7 @@ export class UsersService {
   ) {}
 
   async user(where): Promise<UserDocument | null> {
-    return this.model.findOne(where).exec();
+    return this.model.findOne(where).lean();
   }
 
   async delete(userId: string) {
@@ -35,7 +35,7 @@ export class UsersService {
   }
 
   async getUsers(where?): Promise<UserDocument[] | null> {
-    return this.model.find(where).exec();
+    return this.model.find(where).lean();
   }
 
   async create(createUserDto: CreateUserDto): Promise<User> {
@@ -48,7 +48,7 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<UserDocument | null> {
-    return this.model.findById(id).exec();
+    return this.model.findById(id).lean();
   }
 
   async signIn(signinDto: SigninDto) {
@@ -64,7 +64,7 @@ export class UsersService {
   }
 
   async refreshTokens(userId: string): Promise<Tokens> {
-    const user = await this.findById(userId);
+    const user = await this.model.findById(userId).lean();
 
     if (!user) throw new ForbiddenException('Нет доступа');
 

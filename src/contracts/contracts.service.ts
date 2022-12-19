@@ -21,9 +21,9 @@ export class ContractsService {
   ) {}
 
     async exportExcel(id: string) {
-      const contract = await this.model.findById(id)
-      const organization = await this.organization.findById(contract.organization)
-      const docs = await this.docs.find({contract: contract._id})
+      const contract = await this.model.findById(id).lean()
+      const organization = await this.organization.findById(contract.organization).lean()
+      const docs = await this.docs.find({contract: contract._id}).lean()
       const workbook = new ExcelJS.Workbook()
       workbook.creator = 'АСУЗД'
       workbook.created = new Date()
@@ -192,11 +192,11 @@ export class ContractsService {
   }
 
   async findAll(params?: any): Promise<Contract[]> {
-    return this.model.find(params).populate('documents');
+    return this.model.find(params).lean().populate('documents');
   }
 
   async findOne(id: string): Promise<Contract> {
-    return await this.model.findById(id).exec();
+    return this.model.findById(id).lean();
   }
 
   async create(createContractDto: CreateContractDto): Promise<Contract> {
@@ -221,7 +221,7 @@ export class ContractsService {
         updateContractDto.documents = [doc._id];
       }
     }
-    return await this.model.findByIdAndUpdate(id, updateContractDto).exec();
+    return this.model.findByIdAndUpdate(id, updateContractDto).lean();
   }
 
   async delete(id: string): Promise<Contract> {

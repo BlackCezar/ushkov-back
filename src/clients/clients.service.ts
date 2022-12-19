@@ -33,8 +33,8 @@ export class ClientsService {
   ) {}
 
   async exportTable(id: string) {
-    const organization = await this.model.findById(id)
-    const contracts = await this.contracts.find({organization: organization._id})
+    const organization = await this.model.findById(id).lean()
+    const contracts = await this.contracts.find({organization: organization._id}).lean()
     const workbook = new ExcelJS.Workbook()
     workbook.creator = 'АСУЗД'
     workbook.created = new Date()
@@ -139,11 +139,11 @@ export class ClientsService {
   }
 
   async findAll(): Promise<Client[]> {
-    return await this.model.find().populate('user').exec();
+    return this.model.find().populate('user').populate('users').lean();
   }
 
   async findOne(id: string): Promise<Client> {
-    return await (await this.model.findOne({user: id}).exec()).populate('user');
+    return this.model.findOne({user: id}).lean().populate('user').populate('users')
   }
 
   async create(
@@ -178,7 +178,7 @@ export class ClientsService {
       name: updateClientDto.user.name,
     })
     await this.model.updateOne({ _id: id }, updateClientDto);
-    return this.model.findById(id).populate('user');
+    return this.model.findById(id).populate('user').populate('users').lean();
   }
 
   async delete(id: string): Promise<Client> {

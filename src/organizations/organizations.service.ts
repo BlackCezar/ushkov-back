@@ -28,7 +28,7 @@ export class OrganizationsService {
   ) {}
 
   async exportTable(id: string) {
-    const organization = await this.model.findById(id)
+    const organization = await this.model.findById(id).lean()
     const contracts = await this.contracts.find({organization: organization._id, status: {$ne: 3}}).lean()
     const workbook = new ExcelJS.Workbook()
     workbook.creator = 'АСУЗД'
@@ -81,7 +81,7 @@ export class OrganizationsService {
     const headerRow =sheet.getRow(2)
 
     for (const contract of contracts) {
-      const docs = await this.docs.find({contract: contract._id})
+      const docs = await this.docs.find({contract: contract._id}).lean()
       const hasAdditAgreement = docs.find(d => d.type === 'AdditAgreement')
       // @ts-ignore
       const hasTerminations = docs.find(d => d.type === 'Terminations')
@@ -143,11 +143,11 @@ export class OrganizationsService {
   }
 
   async findAll(): Promise<Organization[]> {
-    return await this.model.find().populate('users').exec();
+    return this.model.find().lean().populate('users')
   }
 
   async findOne(id: string): Promise<Organization> {
-    return await (await this.model.findById(id).exec()).populate('users');
+    return this.model.findById(id).lean().populate('users');
   }
 
   async create(
@@ -166,7 +166,7 @@ export class OrganizationsService {
   ): Promise<Organization> {
     console.log(id);
     await this.model.updateOne({ _id: id }, updateOrganizationDto);
-    return this.model.findById(id).populate('users');
+    return this.model.findById(id).lean().populate('users');
   }
 
   async delete(id: string): Promise<Organization> {

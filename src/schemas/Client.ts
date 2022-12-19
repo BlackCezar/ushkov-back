@@ -10,6 +10,8 @@ export class Client {
   name: string;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User' })
   user: User;
+  @Prop([{type: mongoose.Schema.Types.ObjectId, ref: 'User'}])
+  users: User[];
   @Prop()
   law: string;
 }

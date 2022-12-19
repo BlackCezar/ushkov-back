@@ -30,6 +30,10 @@ export class SFile {
   endDate: Date;
   @Prop()
   comment: string;
+  @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Client'})
+  client?: string;
+  @Prop({default: false})
+  isDownloaded: boolean;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Contract' })
   contract: string;
 }

@@ -4,10 +4,17 @@ import { join } from 'path';
 import { InjectModel } from '@nestjs/mongoose';
 import { FileDocument, SFile } from '../schemas/SFile';
 import { Model, Schema, Types } from 'mongoose';
+import {Client, ClientDocument} from "../schemas/Client";
 
 @Injectable()
 export class DocumentsService {
-  constructor(@InjectModel(SFile.name) private model: Model<FileDocument>) {}
+  constructor(@InjectModel(SFile.name) private model: Model<FileDocument>,
+              @InjectModel(Client.name) private clients: Model<ClientDocument>) {}
+
+  async getClientFiles(userId) {
+    const client = await this.clients.findOne({user: userId}, {_id: 1}).lean()
+    return this.model.find({type: 'Transfer', client: client._id}).lean()
+  }
 
   async deleteDocument(id: string) {
     try {
@@ -28,8 +35,6 @@ export class DocumentsService {
 
   async updateFile(fileId: string, data) {
     const id = new Types.ObjectId(data._id);
-    console.log(id);
-    console.log(data._id);
     await this.model.updateOne(
       { _id: id },
       {
@@ -42,16 +47,18 @@ export class DocumentsService {
           startDate: data.startDate,
           filename: data.filename,
           comment: data.comment,
+          client: data.client,
+          isDownloaded: data.isDownloaded ?? false
         },
       },
     );
-    return this.model.findOne({ _id: id });
+    return this.model.findOne({ _id: id }).populate('client').lean();
   }
 
   async getFiles(contractId: string) {
     const id = new Types.ObjectId(contractId);
     console.log(id, contractId);
-    return this.model.find({ contract: id });
+    return this.model.find({ contract: id }).lean().populate('client')
   }
 
   async createFile(data): Promise<FileDocument> {
